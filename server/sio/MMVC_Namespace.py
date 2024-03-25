@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 import socketio
 from voice_changer.VoiceChangerManager import VoiceChangerManager
+from gst.Streamer import MMVC_GSTStreamer 
 
 import asyncio
 
@@ -21,16 +22,18 @@ class MMVC_Namespace(socketio.AsyncNamespace):
     def emit_coroutine(self, data):
         asyncio.run(self.emitTo(data))
 
-    def __init__(self, namespace: str, voiceChangerManager: VoiceChangerManager):
+    def __init__(self, namespace: str, voiceChangerManager: VoiceChangerManager, streamer: MMVC_GSTStreamer):
         super().__init__(namespace)
         self.voiceChangerManager = voiceChangerManager
+        self.streamer = streamer
         # self.voiceChangerManager.voiceChanger.emitTo = self.emit_coroutine
         self.voiceChangerManager.setEmitTo(self.emit_coroutine)
 
+
     @classmethod
-    def get_instance(cls, voiceChangerManager: VoiceChangerManager):
+    def get_instance(cls, voiceChangerManager: VoiceChangerManager, streamer: MMVC_GSTStreamer):
         if not hasattr(cls, "_instance"):
-            cls._instance = cls("/test", voiceChangerManager)
+            cls._instance = cls("/test", voiceChangerManager, streamer)
         return cls._instance
 
     def on_connect(self, sid, environ):
@@ -52,8 +55,10 @@ class MMVC_Namespace(socketio.AsyncNamespace):
             res = self.voiceChangerManager.changeVoice(unpackedData)
             audio1 = res[0]
             perf = res[1] if len(res) == 2 else [0, 0, 0]
-            bin = struct.pack("<%sh" % len(audio1), *audio1)
-            await self.emit("response", [timestamp, bin, perf], to=sid)
+            bin = struct.pack(">%sh" % len(audio1), *audio1)
+            #bin = struct.pack("<%sh" % len(audio1), *audio1)
+            #await self.emit("response", [timestamp, bin, perf], to=sid)
+            await self.streamer.push(bin)
 
     def on_disconnect(self, sid):
         # print('[{}] disconnect'.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
