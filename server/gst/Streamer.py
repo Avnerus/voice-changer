@@ -51,8 +51,8 @@ class MMVC_GSTStreamer:
 
         print("Init GST Streamer: Playing, status: {}".format(ret))
 
-    def push(self, data):
+    async def push(self, data):
         # Push data into the appsrc
         print("Pushing {}".format(len(data)))
-        asyncio.run(self.appsrc.emit('push-buffer', Gst.Buffer.new_wrapped(data)))
-
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, self.appsrc.emit, 'push-buffer', Gst.Buffer.new_wrapped(data))

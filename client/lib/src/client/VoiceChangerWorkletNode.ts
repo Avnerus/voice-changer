@@ -440,4 +440,25 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
     }
     return samples;
   };
+
+  bufferOutput = () => {
+    const req: VoiceChangerWorkletProcessorRequest = {
+      requestType: "bufferOutput",
+      voice: new Float32Array(1),
+      numTrancateTreshold: 0,
+      volTrancateThreshold: 0,
+      volTrancateLength: 0,
+    };
+    this.port.postMessage(req);
+  }
+  playOutput = () => {
+    const req: VoiceChangerWorkletProcessorRequest = {
+      requestType: "playOutput",
+      voice: new Float32Array(1),
+      numTrancateTreshold: 0,
+      volTrancateThreshold: 0,
+      volTrancateLength: 0,
+    };
+    this.port.postMessage(req);
+  }
 }

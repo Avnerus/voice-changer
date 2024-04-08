@@ -206,6 +206,13 @@ export class VoiceChangerClient {
         this._isVoiceChanging = false;
     };
 
+    bufferOutput = async () => {
+        await this.vcOutNode.bufferOutput();
+    }
+    playOutput = async () => {
+        await this.vcOutNode.playOutput();
+    }
+
     get isVoiceChanging(): boolean {
         return this._isVoiceChanging;
     }

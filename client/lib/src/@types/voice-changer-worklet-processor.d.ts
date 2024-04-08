@@ -4,6 +4,8 @@ export declare const RequestType: {
     readonly start: "start";
     readonly stop: "stop";
     readonly trancateBuffer: "trancateBuffer";
+    readonly bufferOutput: "bufferOutput";
+    readonly playOutput: "playOutput";
 };
 export type RequestType = (typeof RequestType)[keyof typeof RequestType];
 export declare const ResponseType: {

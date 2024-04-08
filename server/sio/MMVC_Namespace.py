@@ -55,10 +55,15 @@ class MMVC_Namespace(socketio.AsyncNamespace):
             res = self.voiceChangerManager.changeVoice(unpackedData)
             audio1 = res[0]
             perf = res[1] if len(res) == 2 else [0, 0, 0]
+
+            ## GSTreamer version
             bin = struct.pack(">%sh" % len(audio1), *audio1)
-            #bin = struct.pack("<%sh" % len(audio1), *audio1)
-            #await self.emit("response", [timestamp, bin, perf], to=sid)
             await self.streamer.push(bin)
+
+            ## Original socket version
+            bin = struct.pack("<%sh" % len(audio1), *audio1)
+            print("Emitting response")
+            await self.emit("response", [timestamp, bin, perf], to=sid)
 
     def on_disconnect(self, sid):
         # print('[{}] disconnect'.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))

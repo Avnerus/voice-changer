@@ -4,6 +4,8 @@ export const RequestType = {
     start: "start",
     stop: "stop",
     trancateBuffer: "trancateBuffer",
+    bufferOutput: "bufferOutput",
+    playOutput: "playOutput"
 } as const;
 export type RequestType = (typeof RequestType)[keyof typeof RequestType];
 
@@ -40,6 +42,8 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
     // private volTrancateCount = 0
 
     private isRecording = false;
+
+    private isPlaying = true;
 
     playBuffer: Float32Array[] = [];
     unpushedF32Data: Float32Array = new Float32Array(0);
@@ -100,6 +104,12 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
         } else if (request.requestType === "trancateBuffer") {
             this.trancateBuffer();
             return;
+        } else if (request.requestType === "bufferOutput") {
+            this.isPlaying = false;
+            return;
+        } else if (request.requestType === "playOutput") {
+            this.isPlaying = true;
+            return;
         }
 
         const f32Data = request.voice;
@@ -107,10 +117,11 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
         //     console.log(`[worklet] Truncate ${this.playBuffer.length} > ${this.numTrancateTreshold}`);
         //     this.trancateBuffer();
         // }
+        /*
         if (this.playBuffer.length > (f32Data.length / this.BLOCK_SIZE) * 1.5) {
             console.log(`[worklet] Truncate ${this.playBuffer.length} > ${f32Data.length / this.BLOCK_SIZE}`);
             this.trancateBuffer();
-        }
+        }*/
 
         const concatedF32Data = new Float32Array(this.unpushedF32Data.length + f32Data.length);
         concatedF32Data.set(this.unpushedF32Data);
@@ -171,17 +182,19 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
         //         // console.log("silent...skip")
         //     }
         // }
-        let voice = this.playBuffer.shift();
-        if (voice) {
-            this.volume = this.calcVol(voice, this.volume);
-            const volumeResponse: VoiceChangerWorkletProcessorResponse = {
-                responseType: ResponseType.volume,
-                volume: this.volume,
-            };
-            this.port.postMessage(volumeResponse);
-            outputs[0][0].set(voice);
-            if (outputs[0].length == 2) {
-                outputs[0][1].set(voice);
+        if (this.isPlaying) {
+            let voice = this.playBuffer.shift();
+            if (voice) {
+                this.volume = this.calcVol(voice, this.volume);
+                const volumeResponse: VoiceChangerWorkletProcessorResponse = {
+                    responseType: ResponseType.volume,
+                    volume: this.volume,
+                };
+                this.port.postMessage(volumeResponse);
+                outputs[0][0].set(voice);
+                if (outputs[0].length == 2) {
+                    outputs[0][1].set(voice);
+                }
             }
         }
 
