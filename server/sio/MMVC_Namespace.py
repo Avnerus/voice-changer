@@ -62,7 +62,6 @@ class MMVC_Namespace(socketio.AsyncNamespace):
 
             ## Original socket version
             bin = struct.pack("<%sh" % len(audio1), *audio1)
-            print("Emitting response")
             await self.emit("response", [timestamp, bin, perf], to=sid)
 
     def on_disconnect(self, sid):
