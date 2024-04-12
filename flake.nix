@@ -22,18 +22,75 @@
           cudaSupport = true;
         };
         faiss-cpu = pkgs.python310Packages.faiss;
+        gin = pkgs.python310Packages.gin-config;
+        torchcrepe = pkgs.python310Packages.buildPythonPackage rec {
+          pname = "torchcrepe";
+          version = "0.0.22";
+          doCheck = false;
+          propagatedBuildInputs = with pkgs.python3Packages; [
+            setuptools
+            wheel
+	        ];
+          src = (pkgs.fetchFromGitHub {
+            owner = "maxrmorrison";
+            repo = "torchcrepe";
+            rev = "master";
+            sha256 = "1baxkhb9j7a86v817p7myhcd502wk6rvx849ln8hbbhzsh9ii8zc";
+        });};
+        local-attention = pkgs.python310Packages.buildPythonPackage rec {
+          pname = "local-attention";
+          version = "1.9.0";
+          doCheck = false;
+          propagatedBuildInputs = with pkgs.python3Packages; [
+            setuptools
+            wheel
+	        ];
+          src = (pkgs.fetchFromGitHub {
+            owner = "lucidrains";
+            repo = "local-attention";
+            rev = "master";
+            sha256 = "0v0bb4y821khlizp04arszi9g52fgnjsp91s9i770qyjhm9z77wh";
+        });};
+        onnxsim = pkgs.python310Packages.buildPythonPackage rec {
+          pname = "onnxsim";
+          version = "0.4.36";
+          doCheck = false;
+          propagatedBuildInputs = with pkgs.python3Packages; [
+            setuptools
+            wheel
+	        ];
+          src = (pkgs.fetchFromGitHub {
+            owner = "daquexian";
+            repo = "onnx-simplifier";
+            rev = "master";
+            sha256 = "03d2skhfvmq7qmfaijmy79c486sbzfyrkxh1l5sljxw9iq1xzpmc";
+        });};
+        torchfcpe = pkgs.python310Packages.buildPythonPackage rec {
+          pname = "torchfcpe";
+          version = "0.0.4";
+          doCheck = false;
+          propagatedBuildInputs = with pkgs.python3Packages; [
+            setuptools
+            wheel
+	        ];
+          src = (pkgs.fetchFromGitHub {
+            owner = "CNChTu";
+            repo = "FCPE";
+            rev = "master";
+            sha256 = "0shaps3yqqzkwpi6vq3wkicybw5b3r2nnk5cnvvshj3r8sn431d4";
+        });};
       };
     };
 
     pythonEnv =
       # Assert that versions from nixpkgs matches what's described in requirements.txt
       # In projects that are overly strict about pinning it might be best to remove this assertion entirely.
-      assert project.validators.validateVersionConstraints { inherit python; } == { }; (
+      #assert project.validators.validateVersionConstraints { inherit python; } == { }; (
         # Render requirements.txt into a Python withPackages environment
-        pkgs.python3.withPackages (project.renderers.withPackages {
+        pkgs.python310.withPackages (project.renderers.withPackages {
           inherit python;
-        })
-      );
+        });
+      #);
 
     myEnv = pkgs.buildEnv {
       name = "puppetbots-voice-env";
