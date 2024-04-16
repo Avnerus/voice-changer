@@ -128,20 +128,23 @@
         ]))
       ];
 
-      voicePythonEnv =
-        # Assert that versions from nixpkgs matches what's described in requirements.txt
-        # In projects that are overly strict about pinning it might be best to remove this assertion entirely.
-        #assert project.validators.validateVersionConstraints { inherit python; } == { }; (
-          # Render requirements.txt into a Python withPackages environment
-        python.withPackages ( project.renderers.withPackages 
-        {
-            inherit python;
-        } );
-
-      gstPythohEnv = pkgs.buildEnv {
-        name = "puppetbots-voice-env";
+      voicePythonEnv = pkgs.buildEnv {
+        name = "puppetbots-python-env";
         paths = [
-          pkgs.python310Packages.gst-python
+          (python.withPackages ( project.renderers.withPackages 
+          {
+              inherit python;
+              extraPackages = ps: with ps; [
+                gst-python
+                pygobject3
+              ];
+          } ))
+        ];
+      };
+
+      gstEnv = pkgs.buildEnv {
+        name="puppetbots-gst-env"; 
+        paths = [
           pkgs.linuxPackages.nvidia_x11
           pkgs.portaudio
           pkgs.gst_all_1.gstreamer
@@ -183,7 +186,7 @@
         packages.x86_64-linux = {
           default = pkgs.mkShell {
             name = "puppetbots-voice-shell";
-            buildInputs = [ voicePythonEnv ];
+            buildInputs = [ voicePythonEnv gstEnv ];
             shellHook = ''
               export LD_LIBRARY_PATH="/usr/lib/wsl/lib"
               export GST_PLUGIN_PATH="${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0"
