@@ -37,11 +37,15 @@
             outputs = pkgs.lib.remove "doc" oA.outputs;
             nativeBuildInputs = pkgs.lib.remove super.sphinxHook oA.nativeBuildInputs;
           });
-          # https://discourse.nixos.org/t/duplicate-when-installing-extrapackage-from-overlay/7736/7
           pyjwt = super.pyjwt.overridePythonAttrs (oA: {
             outputs = pkgs.lib.remove "doc" oA.outputs;
             nativeBuildInputs = pkgs.lib.remove super.sphinxHook oA.nativeBuildInputs;
           });  
+          wrapt = super.wrapt.overridePythonAttrs (oA: {
+            outputs = pkgs.lib.remove "doc" oA.outputs;
+            nativeBuildInputs = pkgs.lib.remove super.sphinxHook oA.nativeBuildInputs;
+          });  
+
           /* Conflicts? */
           gin-config = pkgs.python310Packages.gin-config;
           numpy = pkgs.python310Packages.numpy;
@@ -128,6 +132,10 @@
         ]))
       ];
 
+      #onnxruntime = pkgs.onnxruntime.override {
+      #  python3Packages = pkgs.python310Packages;
+      #};
+
       voicePythonEnv = pkgs.buildEnv {
         name = "puppetbots-python-env";
         paths = [
@@ -137,6 +145,11 @@
               extraPackages = ps: with ps; [
                 gst-python
                 pygobject3
+                tqdm
+                fairseq
+                rich
+                onnx
+                pyworld
               ];
           } ))
         ];
@@ -152,6 +165,7 @@
           pkgs.gst_all_1.gst-plugins-good
           pkgs.gst_all_1.gst-plugins-bad
           pkgs.gst_all_1.gst-plugins-ugly
+          pkgs.libsoup
           pkgs.pkg-config
           pkgs.gobject-introspection
           pkgs.cairo
@@ -170,7 +184,7 @@
       dockerImage = pkgs.dockerTools.buildLayeredImage {
         name = "puppetbots-voice";
         tag = "latest";
-        contents = [ onnxPythonEnv voicePythonEnv pkgs.bashInteractive];
+        contents = [ voicePythonEnv gstEnv pkgs.bashInteractive];
         config = {
           Cmd = [ "/bin/bash" ];
           Env = [
@@ -187,8 +201,10 @@
           default = pkgs.mkShell {
             name = "puppetbots-voice-shell";
             buildInputs = [ voicePythonEnv gstEnv ];
+            # LD_LIBRARY_PATH is a hack for my shell only, because WSL libs require exporting LD_LIBRARY_PATH
+            # But that overrides the injection of the onnxruntime lib path, so I need to export that too...
             shellHook = ''
-              export LD_LIBRARY_PATH="/usr/lib/wsl/lib"
+              export LD_LIBRARY_PATH="/usr/lib/wsl/lib:${pkgs.python310Packages.onnxruntime}/lib/python3.10/site-packages/onnxruntime/capi"
               export GST_PLUGIN_PATH="${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0"
               export PATH="$PATH:${pkgs.gst_all_1.gstreamer.dev}/bin"
               export GI_TYPELIB_PATH="${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.gst_all_1.gstreamer.out}/lib/girepository-1.0"
