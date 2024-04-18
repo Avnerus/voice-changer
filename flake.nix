@@ -23,7 +23,7 @@
         };
         system = "x86_64-linux";
       };
-
+      
       python = pkgs.python310.override {
         packageOverrides = self: super: {
           buildPythonPackage = args: super.buildPythonPackage (args // { doCheck = false;});
@@ -120,26 +120,7 @@
         };
       };
 
-
-      # Isolating Onnx, problematic build..
-      # Ran out of memory while compiling CUDA code. Increased swap file size to 32GB
-      # Testing command:
-      # nix build -L --max-jobs 1 --impure --show-trace . 
-      onnxPythonEnv = [
-        (python.withPackages (python-pkgs: [
-          python-pkgs.onnxruntime-gpu
-          python-pkgs.onnxsim
-        ]))
-      ];
-
-      #onnxruntime = pkgs.onnxruntime.override {
-      #  python3Packages = pkgs.python310Packages;
-      #};
-
-      voicePythonEnv = pkgs.buildEnv {
-        name = "puppetbots-python-env";
-        paths = [
-          (python.withPackages ( project.renderers.withPackages 
+      voicePythonPackages = python.withPackages ( project.renderers.withPackages 
           {
               inherit python;
               extraPackages = ps: with ps; [
@@ -151,14 +132,11 @@
                 onnx
                 pyworld
               ];
-          } ))
-        ];
-      };
+      } );
 
-      gstEnv = pkgs.buildEnv {
-        name="puppetbots-gst-env"; 
+      gstPackages = pkgs.symlinkJoin {
+        name="puppetbots-gst"; 
         paths = [
-          pkgs.linuxPackages.nvidia_x11
           pkgs.portaudio
           pkgs.gst_all_1.gstreamer
           pkgs.gst_all_1.gst-plugins-base
@@ -175,6 +153,7 @@
           pkgs.zlib
         ];
       };
+
       gitRepo = pkgs.fetchgit {
         url = "https://github.com/Avnerus/voice-changer.git";
         rev = "473f55d8f3402afe9b44d91b7f9be2672280fda9";
@@ -184,15 +163,17 @@
       dockerImage = pkgs.dockerTools.buildLayeredImage {
         name = "puppetbots-voice";
         tag = "latest";
-        contents = [ voicePythonEnv gstEnv pkgs.bashInteractive];
+        contents = [ voicePythonPackages gstPackages gitRepo pkgs.bash pkgs.coreutils ];
         config = {
-          Cmd = [ "/bin/bash" ];
+          Cmd = [ "${pkgs.bash}/bin/bash" ];
           Env = [
+            # For the driver library injected by nvidia-docker and onnxruntime
+            "LD_LIBRARY_PATH=/usr/lib64:${pkgs.python310Packages.onnxruntime}/lib/python3.10/site-packages/onnxruntime/capi"
             "GST_PLUGIN_PATH=${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0"
             "PATH=$PATH:${pkgs.gst_all_1.gstreamer.dev}/bin"
             "GI_TYPELIB_PATH=${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.gst_all_1.gstreamer.out}/lib/girepository-1.0"
-            "EXTRA_LDFLAGS=-L/lib -L${pkgs.linuxPackages.nvidia_x11}/lib"
             "EXTRA_CCFLAGS=-I/usr/include"
+            "PATH=/bin:/usr/bin:${gstPackages}/bin:${pkgs.linuxPackages.nvidia_x11.bin}/bin"
           ];
         };
       };
@@ -200,7 +181,7 @@
         packages.x86_64-linux = {
           default = pkgs.mkShell {
             name = "puppetbots-voice-shell";
-            buildInputs = [ voicePythonEnv gstEnv ];
+            buildInputs = [ voicePythonPackages gstPackages ];
             # LD_LIBRARY_PATH is a hack for my shell only, because WSL libs require exporting LD_LIBRARY_PATH
             # But that overrides the injection of the onnxruntime lib path, so I need to export that too...
             shellHook = ''
