@@ -1,4 +1,7 @@
-cd server && python3 MMVCServerSIO.py -p 8000 --https true \
+cd /app/server && python3 MMVCServerSIO.py -p 8000 --https true \
+    --httpsSelfSigned false \
+    --httpsKey keys/ssl.key \
+    --httpsCert keys/ssl.crt \
     --content_vec_500 pretrain/checkpoint_best_legacy_500.pt  \
     --content_vec_500_onnx pretrain/content_vec_500.onnx \
     --content_vec_500_onnx_on true \
