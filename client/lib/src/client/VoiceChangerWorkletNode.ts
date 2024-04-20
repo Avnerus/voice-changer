@@ -14,6 +14,7 @@ export type VoiceChangerWorkletListener = {
   notifyVolume: (vol: number) => void;
   notifySendBufferingTime: (time: number) => void;
   notifyResponseTime: (time: number, perf?: number[]) => void;
+  notifyConnection: () => void;
   notifyException: (
     code: VOICE_CHANGER_CLIENT_EXCEPTION,
     message: string
@@ -106,6 +107,7 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
         );
       });
       this.socket.on("connect", () => {
+        this.listener.notifyConnection();
         console.log(`[SIO] connect to ${this.setting.serverUrl}`);
         console.log(`[SIO] ${this.socket?.id}`);
       });
@@ -304,6 +306,8 @@ export class VoiceChangerWorkletNode extends AudioWorkletNode {
 
       this.listener.notifySendBufferingTime(Date.now() - this.bufferStart);
       this.bufferStart = Date.now();
+    } else if (event.data.responseType === "buffer_size") {
+        console.log("Play buffer size", event.data.volume);
     } else {
       console.warn(
         `[worklet_node][voice-changer-worklet-processor] unknown response ${event.data.responseType}`,

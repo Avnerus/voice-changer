@@ -181,6 +181,8 @@ export const useClient = (props: UseClientProps): ClientState => {
                 notifyVolume: (vol: number) => {
                     setVolume(vol);
                 },
+                notifyConnection() {
+                },
             });
 
             await voiceChangerClient.isInitialized();

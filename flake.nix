@@ -1,7 +1,7 @@
   {
     description = "Voice changer docker with Nix Flakes";
     inputs.nixpkgs.url = "github:avnerus/nixpkgs/ac5231a023cc9f8a6116281b0cc124f9f433cf3a";
-    inputs.pyproject-nix.url = "github:nix-community/pyproject.nix";
+    inputs.pyproject-nix.url = "github:nix-community/pyproject.nix/794220b75a5cddd88f2a6ac6e557a01bc3a9806c";
 
     outputs = {
       self,
@@ -65,7 +65,7 @@
             src = (pkgs.fetchFromGitHub {
               owner = "maxrmorrison";
               repo = "torchcrepe";
-              rev = "master";
+              rev = "1c002b6dba18200352c3935b52622fef1b4a9b53";
               sha256 = "1baxkhb9j7a86v817p7myhcd502wk6rvx849ln8hbbhzsh9ii8zc";
           });};
           local-attention = pkgs.python310Packages.buildPythonPackage rec {
@@ -102,8 +102,8 @@
             src = (pkgs.fetchFromGitHub {
               owner = "CNChTu";
               repo = "FCPE";
-              rev = "master";
-              sha256 = "0shaps3yqqzkwpi6vq3wkicybw5b3r2nnk5cnvvshj3r8sn431d4";
+              rev = "ce215e7a53e5c936e44e1f20983e041da93e3d89";
+              sha256 = "sha256-bdr+DHUc1buUdC1mBKXc7dZbqCW2Pb9HwWO3OucGNjU=";
           });};
           # Nixpkgs bug? :(
           sphinxcontrib-jquery = super.sphinxcontrib-jquery.overrideAttrs (oldAttrs: {
@@ -154,16 +154,10 @@
         ];
       };
 
-      gitRepo = pkgs.fetchgit {
-        url = "https://github.com/Avnerus/voice-changer.git";
-        rev = "473f55d8f3402afe9b44d91b7f9be2672280fda9";
-        sha256 = "sha256-o4M1Z1r6Yft1pMr/hUc6uy435AelRy5fhKqrA2n3gwA";
-      };
-
       dockerImage = pkgs.dockerTools.buildLayeredImage {
         name = "puppetbots-voice";
         tag = "latest";
-        contents = [ voicePythonPackages gstPackages gitRepo pkgs.bash pkgs.coreutils ];
+        contents = [ voicePythonPackages gstPackages pkgs.bash pkgs.coreutils ];
         config = {
           Cmd = [ "${pkgs.bash}/bin/bash" ];
           Env = [
@@ -173,7 +167,8 @@
             "PATH=$PATH:${pkgs.gst_all_1.gstreamer.dev}/bin"
             "GI_TYPELIB_PATH=${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.gst_all_1.gstreamer.out}/lib/girepository-1.0"
             "EXTRA_CCFLAGS=-I/usr/include"
-            "PATH=/bin:/usr/bin:${gstPackages}/bin:${pkgs.linuxPackages.nvidia_x11.bin}/bin"
+            # The first one is for being able to run the nvidia-smi command
+            "PATH=${pkgs.linuxPackages.nvidia_x11.bin}/bin:/bin:/usr/bin:${gstPackages}/bin"
           ];
         };
       };

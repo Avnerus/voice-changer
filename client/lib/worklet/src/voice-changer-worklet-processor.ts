@@ -14,6 +14,7 @@ export const ResponseType = {
     inputData: "inputData",
     start_ok: "start_ok",
     stop_ok: "stop_ok",
+    buffer_size: "buffer_size",
 } as const;
 export type ResponseType = (typeof ResponseType)[keyof typeof ResponseType];
 
@@ -52,7 +53,6 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
      */
     constructor() {
         super();
-        console.log("[AudioWorkletProcessor] created.");
         this.initialized = true;
         this.port.onmessage = this.handleMessage.bind(this);
     }
@@ -133,6 +133,13 @@ class VoiceChangerWorkletProcessor extends AudioWorkletProcessor {
             this.playBuffer.push(block);
         }
         this.unpushedF32Data = concatedF32Data.slice(chunkNum * this.BLOCK_SIZE);
+
+        /*
+        const debugResponse: VoiceChangerWorkletProcessorResponse = {
+            responseType: "buffer_size",
+            volume: this.playBuffer.length,
+        };
+        this.port.postMessage(debugResponse); */
     }
 
     pushData = (inputData: Float32Array) => {
