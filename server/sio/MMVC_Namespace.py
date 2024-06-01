@@ -4,8 +4,8 @@ import numpy as np
 import socketio
 from voice_changer.VoiceChangerManager import VoiceChangerManager
 from gst.Streamer import MMVC_GSTStreamer 
-
 import asyncio
+import redis
 
 
 class MMVC_Namespace(socketio.AsyncNamespace):
@@ -28,6 +28,8 @@ class MMVC_Namespace(socketio.AsyncNamespace):
         self.streamer = streamer
         # self.voiceChangerManager.voiceChanger.emitTo = self.emit_coroutine
         self.voiceChangerManager.setEmitTo(self.emit_coroutine)
+        self.r = redis.Redis(host='localhost', port=6379, db=0)
+        print("Redis connection: {}".format(self.r))
 
 
     @classmethod
@@ -38,6 +40,13 @@ class MMVC_Namespace(socketio.AsyncNamespace):
 
     def on_connect(self, sid, environ):
         self.sid = sid
+        # Are you the active puppeteer?
+        try:
+            allowed_address = self.r.get("puppeteer")
+            print("Allowed address: {} / Current address: {}".format(allowed_address, environ["REMOTE_ADDR"]))
+        except:
+            print("No redis connection, client is allowed")
+
         print("[{}] connet sid : {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), sid))
         pass
 

@@ -95,6 +95,7 @@
       "original": {
         "owner": "nix-community",
         "repo": "pyproject.nix",
+        "rev": "794220b75a5cddd88f2a6ac6e557a01bc3a9806c",
         "type": "github"
       }
     },

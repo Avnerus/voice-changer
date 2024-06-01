@@ -102,8 +102,8 @@
             src = (pkgs.fetchFromGitHub {
               owner = "CNChTu";
               repo = "FCPE";
-              rev = "ce215e7a53e5c936e44e1f20983e041da93e3d89";
-              sha256 = "sha256-bdr+DHUc1buUdC1mBKXc7dZbqCW2Pb9HwWO3OucGNjU=";
+              rev = "v0.0.4";
+              sha256 = "0lv7vdhy20hrrxfx0qlijsacpqmpanh9al8krq8dgykp4fbl4jlw";
           });};
           # Nixpkgs bug? :(
           sphinxcontrib-jquery = super.sphinxcontrib-jquery.overrideAttrs (oldAttrs: {
@@ -131,6 +131,7 @@
                 rich
                 onnx
                 pyworld
+                redis
               ];
       } );
 
