@@ -79,8 +79,8 @@
             src = (pkgs.fetchFromGitHub {
               owner = "lucidrains";
               repo = "local-attention";
-              rev = "master";
-              sha256 = "0v0bb4y821khlizp04arszi9g52fgnjsp91s9i770qyjhm9z77wh";
+              rev = "1.9.0";
+              sha256 = "sha256-QH1roiKaclkfFr+85CWKD5Xz6eJPST0jmRYwqylSdqo=";
           });};
           onnxsim = pkgs.python310Packages.buildPythonPackage rec {
             pname = "onnxsim";
@@ -144,7 +144,9 @@
           pkgs.gst_all_1.gst-plugins-good
           pkgs.gst_all_1.gst-plugins-bad
           pkgs.gst_all_1.gst-plugins-ugly
+          pkgs.gst_all_1.gst-plugins-rs
           pkgs.libsoup
+          pkgs.libnice.dev
           pkgs.pkg-config
           pkgs.gobject-introspection
           pkgs.cairo
@@ -164,7 +166,7 @@
           Env = [
             # For the driver library injected by nvidia-docker and onnxruntime
             "LD_LIBRARY_PATH=/usr/lib64:${pkgs.python310Packages.onnxruntime}/lib/python3.10/site-packages/onnxruntime/capi"
-            "GST_PLUGIN_PATH=${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0"
+            "GST_PLUGIN_PATH=${pkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-bad}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-ugly}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-rs}/lib/gstreamer-1.0:${pkgs.libnice.out}/lib/gstreamer-1.0"
             "PATH=$PATH:${pkgs.gst_all_1.gstreamer.dev}/bin"
             "GI_TYPELIB_PATH=${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.gst_all_1.gstreamer.out}/lib/girepository-1.0"
             "EXTRA_CCFLAGS=-I/usr/include"
@@ -182,7 +184,7 @@
             # But that overrides the injection of the onnxruntime lib path, so I need to export that too...
             shellHook = ''
               export LD_LIBRARY_PATH="/usr/lib/wsl/lib:${pkgs.python310Packages.onnxruntime}/lib/python3.10/site-packages/onnxruntime/capi"
-              export GST_PLUGIN_PATH="${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0"
+              export GST_PLUGIN_PATH="${pkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-bad}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-ugly}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-rs}/lib/gstreamer-1.0:${pkgs.libnice.out}/lib/gstreamer-1.0"
               export PATH="$PATH:${pkgs.gst_all_1.gstreamer.dev}/bin"
               export GI_TYPELIB_PATH="${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.gst_all_1.gstreamer.out}/lib/girepository-1.0"
               export EXTRA_LDFLAGS="-L/lib -L${pkgs.linuxPackages.nvidia_x11}/lib"

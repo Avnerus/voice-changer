@@ -13,42 +13,18 @@ class MMVC_GSTStreamer:
         Gst.init(None)
 
         # Create the pipeline
-        pipeline = Gst.Pipeline()
-
-        # Create appsrc element
-        self.appsrc = Gst.ElementFactory.make('appsrc', 'audio_source')
+        self.pipe = Gst.parse_launch(
+            'webrtcsink signaller::uri="ws://127.0.0.1:8000" name=ws meta="meta,name=puppet" audio-caps="audio/x-opus" appsrc name=voice ! audioconvert ! ws.')
+        self.webrtcsink = self.pipe.get_by_name('ws')
+        self.signaller = self.webrtcsink.get_property('signaller')
+        self.appsrc = self.pipe.get_by_name('voice')
         self.appsrc.set_property('format', Gst.Format.TIME)
-
+        self.appsrc.set_property("is-live", True)
         caps = Gst.Caps.from_string("audio/x-raw,format=S16BE,layout=interleaved,rate=48000,channels=1,payload=96")
         self.appsrc.set_property('caps', caps)
 
-        pipeline.add(self.appsrc)
-
-        audio_convert = Gst.ElementFactory.make('audioconvert', 'audio_convert')   
-        pipeline.add(audio_convert)
-
-        # Create RTP audio payloader
-        rtp_pay = Gst.ElementFactory.make('rtpL16pay', 'rtp_pay')
-        pipeline.add(rtp_pay)
-
-        # Link appsrc with RTP payloader
-        self.appsrc.link(rtp_pay)
-
-        # Create UDP sink
-        udp_sink = Gst.ElementFactory.make('udpsink', 'udp_sink')
-
-        # Set the host and port to send to
-        udp_sink.set_property('host', '192.168.1.209')
-        udp_sink.set_property('port', 5000)
-
-        pipeline.add(udp_sink)
-
-        # Link RTP payloader with UDP sink
-        rtp_pay.link(udp_sink)
-
         # Start playing
-        ret = pipeline.set_state(Gst.State.PLAYING)
-
+        ret = self.pipe.set_state(Gst.State.PLAYING)
         print("Init GST Streamer: Playing, status: {}".format(ret))
 
     async def push(self, data):
