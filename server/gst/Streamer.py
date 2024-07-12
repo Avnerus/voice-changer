@@ -3,6 +3,7 @@ import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst
 import os
+import numpy as np
 os.environ["GST_DEBUG"] = "3"
 
 class MMVC_GSTStreamer:
@@ -14,7 +15,7 @@ class MMVC_GSTStreamer:
 
         # Create the pipeline
         self.pipe = Gst.parse_launch(
-            'webrtcsink signaller::uri="ws://127.0.0.1:8000" name=ws meta="meta,name=puppet" audio-caps="audio/x-opus" appsrc name=voice ! audioconvert ! ws.')
+            'webrtcsink signaller::uri="ws://puppetvoice.aalto.fi:8443" name=ws meta="meta,name=puppet" audio-caps="audio/x-opus" appsrc name=voice ! audioconvert ! ws.')
         self.webrtcsink = self.pipe.get_by_name('ws')
         self.signaller = self.webrtcsink.get_property('signaller')
         self.appsrc = self.pipe.get_by_name('voice')
@@ -27,8 +28,15 @@ class MMVC_GSTStreamer:
         ret = self.pipe.set_state(Gst.State.PLAYING)
         print("Init GST Streamer: Playing, status: {}".format(ret))
 
+        asyncio.create_task(self.push_zeroes())
+
     async def push(self, data):
         # Push data into the appsrc
         print("Pushing {}".format(len(data)))
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, self.appsrc.emit, 'push-buffer', Gst.Buffer.new_wrapped(data))
+
+    async def push_zeroes(self):
+        # Push some zeroes to force the pipeline to start and connect to the signalling server
+        for i in range(10):
+            await self.push(np.zeros(4096).astype(np.int16))
