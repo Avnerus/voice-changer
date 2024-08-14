@@ -14,8 +14,7 @@ class MMVC_GSTStreamer:
         Gst.init(None)
 
         # Create the pipeline
-        self.pipe = Gst.parse_launch(
-            'webrtcsink signaller::uri="ws://puppetvoice.aalto.fi:8443" name=ws meta="meta,name=puppet" audio-caps="audio/x-opus" appsrc name=voice ! audioconvert ! ws.')
+        self.pipe = Gst.parse_launch( 'webrtcsink signaller::uri="wss://puppetvoice.aalto.fi:8443" name=ws meta="meta,name=puppet" audio-caps="audio/x-opus" appsrc name=voice ! audioconvert ! ws.')
         self.webrtcsink = self.pipe.get_by_name('ws')
         self.signaller = self.webrtcsink.get_property('signaller')
         self.appsrc = self.pipe.get_by_name('voice')
