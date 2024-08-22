@@ -69,8 +69,11 @@ class MMVC_Namespace(socketio.AsyncNamespace):
             bin = struct.pack(">%sh" % len(audio1), *audio1)
             await self.streamer.push(bin)
 
-            ## Original socket version
-            bin = struct.pack("<%sh" % len(audio1), *audio1)
+            ## Send empty audio back if only forwarding the stream to gst
+            if self.voiceChangerManager.settings.onlyForward:
+                bin = bytes()
+            else:
+                bin = struct.pack("<%sh" % len(audio1), *audio1)
             await self.emit("response", [timestamp, bin, perf], to=sid)
 
     def on_disconnect(self, sid):

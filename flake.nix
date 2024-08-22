@@ -154,6 +154,7 @@
           pkgs.libffi
           pkgs.ffmpeg
           pkgs.zlib
+          pkgs.cacert
         ];
       };
 

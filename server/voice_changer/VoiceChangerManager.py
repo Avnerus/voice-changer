@@ -38,8 +38,9 @@ class GPUInfo:
 class VoiceChangerManagerSettings:
     modelSlotIndex: int | StaticSlot = -1
     passThrough: bool = False  # 0: off, 1: on
+    onlyForward: bool = True  # 0: off, 1: on
     # ↓mutableな物だけ列挙
-    boolData: list[str] = field(default_factory=lambda: ["passThrough"])
+    boolData: list[str] = field(default_factory=lambda: ["passThrough", "onlyForward"])
     intData: list[str] = field(
         default_factory=lambda: [
             "modelSlotIndex",
